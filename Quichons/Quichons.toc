@@ -1,0 +1,22 @@
+## Interface: 80000
+## Title: Quichons
+## Author: Nâmo-Ysondre
+## Version: 0.1
+## SavedVariablesPerCharacter: BFA_MASTERLOOT_MAX_ILVL, BFA_MASTERLOOT_SLOT_ILVL
+
+#@no-lib-strip@
+Libs\LibStub\LibStub.lua
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceComm-3.0\AceComm-3.0.xml
+Libs\LibCompress\LibCompress.lua
+Libs\AceSerializer-3.0\AceSerializer-3.0.xml
+Libs\LibStub\LibStub.lua
+#@end-no-lib-strip@
+
+get_item_information.lua
+is_equippable_item_for_character.lua
+serialize.lua
+core.lua
