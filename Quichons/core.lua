@@ -856,7 +856,7 @@ local function AddPlayerLine(container, needList, looter, itemLink)
 
 			if (needInformation.itemLink2 ~= nil) then
 			   local fullItemInfo2 = BFAMasterLooter.GetFullItemInfo(needInformation.itemLink2);
-			   ShowItemOnFrame(fullItemInfo, container);
+			   ShowItemOnFrame(fullItemInfo2, container);
 			end
 			
 			local label = AceGUI:Create("Label");
@@ -1068,6 +1068,26 @@ Comm:RegisterComm("BFA_ML_ATTRIB", function(prefix, message, distribution, sende
 	end
 end);
 
+local function Debug()
+	local search = "Handwraps";
+	
+	for bag = 0,4 do
+		for slot = 1,GetContainerNumSlots(bag) do
+			local item = GetContainerItemLink(bag,slot)
+			if item and item:find(search) then
+				print("TROLOLOLOLOLOLO");
+				print(item);
+				
+				local fullItemInfo = BFAMasterLooter.GetFullItemInfo(item);
+				
+				transmitString = BFAMasterLooter.TableToString(fullItemInfo);		
+				Comm:SendCommMessage("BFA_ML_LOOT", transmitString, "RAID");
+
+			end
+		end
+	end
+end
+
 -- Function for initializing purpose
 local function Initialize(self, event, addonName, ...)
 	if (addonName == 'Quichons') then
@@ -1094,6 +1114,9 @@ local function Initialize(self, event, addonName, ...)
 			MajIlvlPerSlot(false);
 		end
 		MajIlevelWithBag();
+		
+		--Debug();
+		
 	end
 end
 

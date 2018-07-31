@@ -98,11 +98,11 @@ local function CheckIfItemIsTradable(itemLinkOfLootedItem)
 end
 
 function BFAMasterLooter.GetFullItemInfo(item)
-	fullItemInfo = {}
+	fullItemInfo = {};
 	fullItemInfo[BFAMasterLooter.FII_LOOTER] = UnitName("player");
 	
 	if item ~= nil then
-		fullItemInfo[BFAMasterLooter.FII_ITEM] = item
+		fullItemInfo[BFAMasterLooter.FII_ITEM] = item;
 		
 		-- determine the basic values from the Blizzard GetItemInfo() API call
 		fullItemInfo[BFAMasterLooter.FII_NAME],
@@ -122,85 +122,86 @@ function BFAMasterLooter.GetFullItemInfo(item)
 			fullItemInfo[BFAMasterLooter.FII_EXPAC_ID],
 			fullItemInfo[BFAMasterLooter.FII_ITEM_SET_ID],
 			fullItemInfo[BFAMasterLooter.FII_IS_CRAFTING_REAGENT]
-			= GetItemInfo(item)
+			= GetItemInfo(item);
 
 		-- determine whether the item is equippable & whether it is a relic
-		fullItemInfo[BFAMasterLooter.FII_IS_EQUIPPABLE] = IsEquippableItem(item)
-		fullItemInfo[BFAMasterLooter.FII_IS_RELIC] = fullItemInfo[BFAMasterLooter.FII_CLASS] == LE_ITEM_CLASS_GEM and fullItemInfo[BFAMasterLooter.FII_SUB_CLASS] == LE_ITEM_ARMOR_RELIC
+		fullItemInfo[BFAMasterLooter.FII_IS_EQUIPPABLE] = IsEquippableItem(item);
+		fullItemInfo[BFAMasterLooter.FII_IS_RELIC] = fullItemInfo[BFAMasterLooter.FII_CLASS] == LE_ITEM_CLASS_GEM and fullItemInfo[BFAMasterLooter.FII_SUB_CLASS] == LE_ITEM_ARMOR_RELIC;
 		
 		-- we only need to determine other values if it's an equippable item or a relic
 		if fullItemInfo[BFAMasterLooter.FII_IS_EQUIPPABLE] or fullItemInfo[BFAMasterLooter.FII_IS_RELIC] then
 
 			-- set up the tooltip to determine values that aren't returned via GetItemInfo()
-			local rows = 30
+			local rows = 30;
 			if fullItemInfo[BFAMasterLooter.FII_IS_RELIC] then
-				rows = 6  -- if it's a relic, we only need to inspect the first 6 rows
+				rows = 6;  -- if it's a relic, we only need to inspect the first 6 rows
 			end
-			tooltip = tooltip or BFAMasterLooter.CreateEmptyTooltip(30)
-			tooltip:SetOwner(UIParent, 'ANCHOR_NONE')
-			tooltip:ClearLines()
-			tooltip:SetHyperlink(item)
-			local t
-			local index
+			tooltip = tooltip or BFAMasterLooter.CreateEmptyTooltip(30);
+			tooltip:SetOwner(UIParent, 'ANCHOR_NONE');
+			tooltip:ClearLines();
+			tooltip:SetHyperlink(item);
+			local t;
+			local index;
 
 			-- determine the real iLVL
-			PLH_ITEM_LEVEL_PATTERN = _G.ITEM_LEVEL
-			PLH_ITEM_LEVEL_PATTERN = PLH_ITEM_LEVEL_PATTERN:gsub('%%d', '(%%d+)')  -- 'Item Level (%d+)'
-			PLH_RELIC_TOOLTIP_TYPE_PATTERN = _G.RELIC_TOOLTIP_TYPE
-			PLH_RELIC_TOOLTIP_TYPE_PATTERN = PLH_RELIC_TOOLTIP_TYPE_PATTERN:gsub('%%s', '(.+)')  -- '(.+) Artifact Relic'
+			PLH_ITEM_LEVEL_PATTERN = _G.ITEM_LEVEL;
+			PLH_ITEM_LEVEL_PATTERN = PLH_ITEM_LEVEL_PATTERN:gsub('%%d', '(%%d+)');  -- 'Item Level (%d+)'
+			PLH_RELIC_TOOLTIP_TYPE_PATTERN = _G.RELIC_TOOLTIP_TYPE;
+			PLH_RELIC_TOOLTIP_TYPE_PATTERN = PLH_RELIC_TOOLTIP_TYPE_PATTERN:gsub('%%s', '(.+)');  -- '(.+) Artifact Relic'
 			
 			local realILVL = nil
-			t = tooltip.leftside[2]:GetText()
+			t = tooltip.leftside[2]:GetText();
 			if t ~= nil then
-				realILVL = t:match(PLH_ITEM_LEVEL_PATTERN)
+				realILVL = t:match(PLH_ITEM_LEVEL_PATTERN);
 			end
 			if realILVL == nil then  -- ilvl can be in the 2nd or 3rd line dependng on the tooltip; if we didn't find it in 2nd, try 3rd
 				t = tooltip.leftside[3]:GetText()
 				if t ~= nil then
-					realILVL = t:match(PLH_ITEM_LEVEL_PATTERN)
+					realILVL = t:match(PLH_ITEM_LEVEL_PATTERN);
 				end
 			end
 			if realILVL == nil then  -- if we still couldn't find it (shouldn't happen), just use the ilvl we got from GetItemInfo()
-				realILVL = fullItemInfo[BFAMasterLooter.FII_BASE_ILVL]
+				realILVL = fullItemInfo[BFAMasterLooter.FII_BASE_ILVL];
 			end
-			fullItemInfo[BFAMasterLooter.FII_REAL_ILVL] = tonumber(realILVL)
+			fullItemInfo[BFAMasterLooter.FII_REAL_ILVL] = tonumber(realILVL);
 
 			-- if the item is a relic, determine the relic type
-			local relicType = nil
+			local relicType = nil;
 			if fullItemInfo[BFAMasterLooter.FII_IS_RELIC] then
-				index = 1
+				index = 1;
 				while not relicType and tooltip.leftside[index] do
-					t = tooltip.leftside[index]:GetText()
+					t = tooltip.leftside[index]:GetText();
 					if t ~= nil then
-						relicType = t:match(PLH_RELIC_TOOLTIP_TYPE_PATTERN)				
+						relicType = t:match(PLH_RELIC_TOOLTIP_TYPE_PATTERN);
 					end
-					index = index + 1
+					index = index + 1;
 				end
 			end
-			fullItemInfo[BFAMasterLooter.FII_RELIC_TYPE] = relicType
+			fullItemInfo[BFAMasterLooter.FII_RELIC_TYPE] = relicType;
 
 			-- if the item is restricted to certain classes, determine which ones
-			local classes = nil
-			index = 1
+			local classes = nil;
+			index = 1;
 			while not classes and tooltip.leftside[index] do
-				t = tooltip.leftside[index]:GetText()
+				t = tooltip.leftside[index]:GetText();
 				if t ~= nil then
-					classes = t:match(PLH_CLASSES_ALLOWED_PATTERN)
+					classes = t:match(PLH_CLASSES_ALLOWED_PATTERN);
 				end
-				index = index + 1
+				index = index + 1;
 			end
 			if classes ~= nil then
-				classes = string.upper(classes)
-				classes = string.gsub(classes, " ", "")  -- remove space for DEMON HUNTER, DEATH KNIGHT
+				classes = string.upper(classes);
+				classes = string.gsub(classes, " ", "");  -- remove space for DEMON HUNTER, DEATH KNIGHT
 			end
-			fullItemInfo[BFAMasterLooter.FII_CLASSES] = classes
+			fullItemInfo[BFAMasterLooter.FII_CLASSES] = classes;
 
 			-- hide the tooltip now that we're done with it (is this really necessary?)
 			tooltip:Hide()
 			
-			fullItemInfo[BFAMasterLooter.FII_TRADABLE] = CheckIfItemIsTradable(fullItemInfo[BFAMasterLooter.FII_LINK])
+			fullItemInfo[BFAMasterLooter.FII_TRADABLE] = CheckIfItemIsTradable(fullItemInfo[BFAMasterLooter.FII_LINK]);
+			fullItemInfo[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2] = nil;
 		end
 	end
 
-	return fullItemInfo
+	return fullItemInfo;
 end
