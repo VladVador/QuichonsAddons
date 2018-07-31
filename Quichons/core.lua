@@ -752,8 +752,7 @@ local function coreFunctionality(self, event, ...)
 		
 			if (lootedItem) then
 				local fullItemInfo = BFAMasterLooter.GetFullItemInfo(lootedItem);
-					
-				-- TODO Testé wpn loot avec tradable = false pour ne pas avoir a testé en condition réel
+
 				if (fullItemInfo[BFAMasterLooter.FII_QUALITY] >= 4 and
 						(fullItemInfo[BFAMasterLooter.FII_IS_EQUIPPABLE] == true
 							or fullItemInfo[BFAMasterLooter.FII_IS_RELIC] == true)
