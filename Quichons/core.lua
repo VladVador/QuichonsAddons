@@ -425,20 +425,20 @@ local function GetIlevelOfSlot(slotName)
 end
 
 local function GetIlevelOfMultiSlot(slotName)
-	local ilvl0, ilvl1, itemLink;
+	local ilvl0, ilvl1, itemLink, itemLink2;
 	
 	if (slotName == FINGER or slotName == TRINKET) then
 		ilvl0, itemLink = GetIlevelOfSlot(slotName .. SLOT0);
-		ilvl1, itemLink = GetIlevelOfSlot(slotName .. SLOT1);
+		ilvl1, itemLink2 = GetIlevelOfSlot(slotName .. SLOT1);
 	else -- else it's a weapon --
 		ilvl0, itemLink = GetIlevelOfSlot(MAINHAND);
-		ilvl1, itemLink = GetIlevelOfSlot(SECONDARYHAND);
+		ilvl1, itemLink2 = GetIlevelOfSlot(SECONDARYHAND);
 	end
 	
 	if (ilvl0 > ilvl1) then
-		return ilvl0, itemLink;
+		return ilvl0, itemLink, itemLink2;
 	else
-		return ilvl1, itemLink;
+		return ilvl1, itemLink, itemLink2;
 	end
 end
 
@@ -620,10 +620,11 @@ local function ButtonHandler(container, label, itemReceived, commentBox)
 			itemReceived[BFAMasterLooter.FII_MAX_ILVL] = 0;
 		end
 		if (itemSlot == FINGER or itemSlot == TRINKET or itemSlot == WEAPON) then
-			ilvl, itemLink = GetIlevelOfMultiSlot(itemSlot);
+			ilvl, itemLink, itemLink2 = GetIlevelOfMultiSlot(itemSlot);
 
 			itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL] = ilvl;
 			itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK] = itemLink;
+			itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2] = itemLink2;
 		else
 			if (itemSlot ~= nil) then
 				ilvl, itemLink = GetIlevelOfSlot(itemSlot);
@@ -851,7 +852,12 @@ local function AddPlayerLine(container, needList, looter, itemLink)
 			end
 			
 			local fullItemInfo = BFAMasterLooter.GetFullItemInfo(needInformation.itemLink);
-			ShowItemOnFrame(fullItemInfo, container)
+			ShowItemOnFrame(fullItemInfo, container);
+
+			if (needInformation.itemLink2 ~= nil) then
+			   local fullItemInfo2 = BFAMasterLooter.GetFullItemInfo(needInformation.itemLink2);
+			   ShowItemOnFrame(fullItemInfo, container);
+			end
 			
 			local label = AceGUI:Create("Label");
 			local text = needInformation.equippedIlvl .. "(actual) - " .. needInformation.maxIlvl .. "(max) - " .. needInformation.rand .. "(rand) - " .. needInformation.note;
@@ -998,6 +1004,7 @@ Comm:RegisterComm("BFA_ML_ATTRIB", function(prefix, message, distribution, sende
 							loot.bis[j].player = itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING];
 							loot.bis[j].equippedIlvl = itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL];
 							loot.bis[j].itemLink = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK];
+							loot.bis[j].itemLink2 = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2];
 							loot.bis[j].maxIlvl = itemReceived[BFAMasterLooter.FII_MAX_ILVL];
 							loot.bis[j].rand = itemReceived[BFAMasterLooter.FII_RAND];
 							loot.bis[j].note = itemReceived[BFAMasterLooter.FII_COMMENT];
@@ -1014,6 +1021,7 @@ Comm:RegisterComm("BFA_ML_ATTRIB", function(prefix, message, distribution, sende
 							loot.ur[j].player = itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING];
 							loot.ur[j].equippedIlvl = itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL];
 							loot.ur[j].itemLink = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK];
+							loot.ur[j].itemLink2 = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2];
 							loot.ur[j].maxIlvl = itemReceived[BFAMasterLooter.FII_MAX_ILVL];
 							loot.ur[j].rand = itemReceived[BFAMasterLooter.FII_RAND];
 							loot.ur[j].note = itemReceived[BFAMasterLooter.FII_COMMENT];
@@ -1030,6 +1038,7 @@ Comm:RegisterComm("BFA_ML_ATTRIB", function(prefix, message, distribution, sende
 							loot.ilevel[j].player = itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING];
 							loot.ilevel[j].equippedIlvl = itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL];
 							loot.ilevel[j].itemLink = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK];
+							loot.ilevel[j].itemLink2 = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2];
 							loot.ilevel[j].maxIlvl = itemReceived[BFAMasterLooter.FII_MAX_ILVL];
 							loot.ilevel[j].rand = itemReceived[BFAMasterLooter.FII_RAND];
 							loot.ilevel[j].note = itemReceived[BFAMasterLooter.FII_COMMENT];
@@ -1046,6 +1055,7 @@ Comm:RegisterComm("BFA_ML_ATTRIB", function(prefix, message, distribution, sende
 							loot.spec2[j].player = itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING];
 							loot.spec2[j].equippedIlvl = itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL];
 							loot.spec2[j].itemLink = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK];
+							loot.spec2[j].itemLink2 = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2];
 							loot.spec2[j].maxIlvl = itemReceived[BFAMasterLooter.FII_MAX_ILVL];
 							loot.spec2[j].rand = itemReceived[BFAMasterLooter.FII_RAND];
 							loot.spec2[j].note = itemReceived[BFAMasterLooter.FII_COMMENT];
