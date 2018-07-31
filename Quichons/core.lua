@@ -6,9 +6,9 @@ local AceGUI = LibStub("AceGUI-3.0");
 local Comm = LibStub:GetLibrary("AceComm-3.0");
 
 --- CONSTANTS --
-local VERSION = 0.2;
+local VERSION = 0.3;
 
-local TIME_FOR_LOOTING = 120;
+local TIME_FOR_LOOTING = 180;
 local TIME_FOR_RAND = 30;
 local TIME_BUFFER = 5;
 
@@ -79,7 +79,7 @@ local transmitString;
 local greaterVersion = VERSION;
 
 local numberOfItemToAttrib = 0;
-local lootList;
+local lootList = {};
 
 -- Loot frame variable --
 local mainFrame;
@@ -343,7 +343,7 @@ Comm:RegisterComm("BFA_ML_VERS", function(prefix, message, distribution, sender)
 	else
 		local versionReceived = tonumber(message);
 		
-		if (versionReceived > greaterVersion) then
+		if (versionReceived ~= nil and (greaterVersion == nil or versionReceived > greaterVersion)) then
 			greaterVersion = versionReceived;
 		end
 		
@@ -614,17 +614,26 @@ local function ButtonHandler(container, label, itemReceived, commentBox)
 		local itemSlot = itemReceived[BFAMasterLooter.FII_ITEM_EQUIP_LOC];
 		itemSlot = TRANSFORM_ITEMSLOT_TO_SLOTNAME[itemSlot];
 		
-		itemReceived[BFAMasterLooter.FII_MAX_ILVL] = BFA_MASTERLOOT_SLOT_ILVL[itemSlot]
+		if (itemSlot ~= nil) then
+			itemReceived[BFAMasterLooter.FII_MAX_ILVL] = BFA_MASTERLOOT_SLOT_ILVL[itemSlot];
+		else
+			itemReceived[BFAMasterLooter.FII_MAX_ILVL] = 0;
+		end
 		if (itemSlot == FINGER or itemSlot == TRINKET or itemSlot == WEAPON) then
 			ilvl, itemLink = GetIlevelOfMultiSlot(itemSlot);
 
 			itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL] = ilvl;
 			itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK] = itemLink;
 		else
-			ilvl, itemLink = GetIlevelOfSlot(itemSlot);
+			if (itemSlot ~= nil) then
+				ilvl, itemLink = GetIlevelOfSlot(itemSlot);
 
-			itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL] = ilvl;
-			itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK] = itemLink;
+				itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL] = ilvl;
+				itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK] = itemLink;
+			else
+				itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL] = 0;
+				itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK] = itemLink;
+			end
 		end
 		
 		transmitString = BFAMasterLooter.TableToString(itemReceived);	
@@ -724,7 +733,7 @@ local function coreFunctionality(self, event, ...)
 			local lootInformation = {};
 			
 			lootInformation.player = UnitName("player");
-			if (arg1 ~= 1) then
+			if (arg1 ~= true) then
 				lootInformation.status = BIG_SHIT_LOOT;
 			else
 				if (time() > lastBossKillTime + TIME_FOR_LOOTING) then
@@ -742,7 +751,8 @@ local function coreFunctionality(self, event, ...)
 		
 			if (lootedItem) then
 				local fullItemInfo = BFAMasterLooter.GetFullItemInfo(lootedItem);
-				
+					
+				-- TODO Testé wpn loot avec tradable = false pour ne pas avoir a testé en condition réel
 				if (fullItemInfo[BFAMasterLooter.FII_QUALITY] >= 4 and
 						(fullItemInfo[BFAMasterLooter.FII_IS_EQUIPPABLE] == true
 							or fullItemInfo[BFAMasterLooter.FII_IS_RELIC] == true)
