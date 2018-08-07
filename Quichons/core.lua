@@ -80,7 +80,6 @@ local greaterVersion = VERSION;
 
 local totalItemLooted = 0;
 local lastItemLooterTimerEnded = 0;
-local currentItemOnAttrib = 0;
 
 local numberOfItemToAttrib = 0;
 local lootList = {};
@@ -723,98 +722,6 @@ local function ShowItemOnFrame(item, container)
 	container:AddChild(itemIcon);
 end
 
-local function AddPlayerLine(container, needList, looter, itemLink)
-	local playerClass;
-	local color;
-	local i;
-	
-	for i=0, MAX_RAID_MEMBERS do
-		if (needList[i] ~= nil) then
-			local needInformation = needList[i];
-			
-			local playerLabel = AceGUI:Create("Label");
-			playerLabel:SetText(needInformation.player);
-			_, playerClass = UnitClass(needInformation.player);
-			color = RAID_CLASS_COLORS[playerClass];
-			
-			if (color ~= nil) then
-				playerLabel:SetColor(color.r, color.g, color.b);
-			end
-			playerLabel:SetWidth(90);
-			playerLabel:SetFont("Fonts\\ARIALN.ttf", 15, "OUTLINE, MONOCHROME")
-			container:AddChild(playerLabel);
-			
-			if (IsRaidLeaderOrAssist() == RAID_LEADER) then
-				local attribButton = AceGUI:Create("Icon");
-				
-				attribButton:SetImageSize(32, 32);
-				attribButton:SetWidth(32);
-				attribButton:SetImage("1418621");
-				attribButton:SetCallback("OnClick", function() AttribLoot(looter, needInformation.player, itemLink, container) end);
-				container:AddChild(attribButton);
-			end
-			
-			local fullItemInfo = BFAMasterLooter.GetFullItemInfo(needInformation.itemLink);
-			ShowItemOnFrame(fullItemInfo, container);
-
-			if (needInformation.itemLink2 ~= nil) then
-			   local fullItemInfo2 = BFAMasterLooter.GetFullItemInfo(needInformation.itemLink2);
-			   ShowItemOnFrame(fullItemInfo2, container);
-			end
-			
-			local label = AceGUI:Create("Label");
-			local text = needInformation.equippedIlvl .. "(actual) - " .. needInformation.maxIlvl .. "(max) - " .. needInformation.rand .. "(rand) - " .. needInformation.note;
-			
-			label:SetText(text);
-			label:SetWidth(350);
-			label:SetFont("Fonts\\ARIALN.ttf", 15);
-			container:AddChild(label);
-		end
-	end
-	local heading = AceGUI:Create("Heading");
-	heading:SetText("lul");
-	container:AddChild(heading);
-end
-
-local function AddItemToAttribFrame(itemId)
-	local loot = lootList[itemId];
-	local looter = loot.looter;
-	
-	if (loot.bis ~= nil or loot.ur ~= nil or loot.ilevel ~= nil or loot.spec2 ~= nil) then
-		local container = AceGUI:Create("SimpleGroup");
-		container.released = false;
-		container:SetFullWidth(true);
-		container:SetHeight(80);
-		container:SetLayout("Flow");
-		attribFrameScroll:AddChild(container);
-
-		ShowItemOnFrame(loot.item, container);
-		
-		if (loot.bis ~= nil) then
-			AddNeedLabel(container, "BIS :", 0, 255, 0);
-			AddPlayerLine(container, loot.bis, looter, loot.item[BFAMasterLooter.FII_LINK]);
-		end
-		if (loot.ur ~= nil) then
-			AddNeedLabel(container, "UR :", 200, 150, 0);
-			AddPlayerLine(container, loot.ur, looter, loot.item[BFAMasterLooter.FII_LINK]);
-		end
-		if (loot.ilevel ~= nil) then
-			AddNeedLabel(container, "ILEVEL 4 TRADE :", 80, 0, 0);
-			AddPlayerLine(container, loot.ilevel, looter, loot.item[BFAMasterLooter.FII_LINK]);
-		end
-		if (loot.spec2 ~= nil) then
-			AddNeedLabel(container, "SPEC2 :", 80, 0, 0);
-			AddPlayerLine(container, loot.spec2, looter, loot.item[BFAMasterLooter.FII_LINK])
-		end
-		
-		local heading = AceGUI:Create("Heading");
-		container:AddChild(heading);
-		
-		if (lastItemLooterTimerEnded == totalItemLooted) then
-			attribFrame:Show();
-		end
-	end
-end
 
 
 
@@ -876,7 +783,6 @@ local function coreFunctionality(self, event, ...)
 			lastItemLooterTimerEnded = 0;
 			print("\124cFFFF0000Quichons ML -\124r Boss " .. lassBossKilledName .. " have been killed, you have " .. TIME_FOR_LOOTING .. "sec to loot the boss, else...");
 			numberOfItemToAttrib = 0; -- On Purge les items en attrib ou cas ou cas ou --
-			currentItemOnAttrib = 0;
 			numberOfItemOnRand = 0;
 			lootList = {};
 			InitAttribFrame();
@@ -915,20 +821,59 @@ end
 local function AttribLoot(looter, playerWhoWon, itemLink, container)
 	SendChatMessage("Envoie le loot " .. itemLink .. " à " .. playerWhoWon .. "!", "WHISPER", "ORCISH", looter);
 	RemoveItemAttrib(container);
+end
+
+local function AddPlayerLine(container, needList, looter, itemLink)
+	local playerClass;
+	local color;
+	local i;
 	
-	if (IsRaidLeaderOrAssist() == RAID_LEADER) then
-		-- On change le contenu de la frame d'attrib pour le nouvelle item, seulement pour le RAID LEADER, les assistants ont la liste complète des loots directement.
-		attribFrameScroll:ReleaseChildren();
+	for i=0, MAX_RAID_MEMBERS do
+		if (needList[i] ~= nil) then
+			local needInformation = needList[i];
+			
+			local playerLabel = AceGUI:Create("Label");
+			playerLabel:SetText(needInformation.player);
+			_, playerClass = UnitClass(needInformation.player);
+			color = RAID_CLASS_COLORS[playerClass];
+			
+			if (color ~= nil) then
+				playerLabel:SetColor(color.r, color.g, color.b);
+			end
+			playerLabel:SetWidth(90);
+			playerLabel:SetFont("Fonts\\ARIALN.ttf", 15, "OUTLINE, MONOCHROME")
+			container:AddChild(playerLabel);
+			
+			if (IsRaidLeaderOrAssist() == RAID_LEADER) then
+				local attribButton = AceGUI:Create("Icon");
+				
+				attribButton:SetImageSize(32, 32);
+				attribButton:SetWidth(32);
+				attribButton:SetImage("1418621");
+				attribButton:SetCallback("OnClick", function() AttribLoot(looter, needInformation.player, itemLink, container) end);
+				container:AddChild(attribButton);
+			end
+			
+			local fullItemInfo = BFAMasterLooter.GetFullItemInfo(needInformation.itemLink);
+			ShowItemOnFrame(fullItemInfo, container);
 
-		newAttribFrameScroll = AceGUI:Create("ScrollFrame");
-		newAttribFrameScroll:SetLayout("Flow");
-		scrollAttribContainer:AddChild(newAttribFrameScroll, attribFrameScroll);
-		attribFrameScroll = newAttribFrameScroll;
-
-		currentItemOnAttrib = currentItemOnAttrib + 1;
-		AddItemToAttribFrame(currentItemOnAttrib);
+			if (needInformation.itemLink2 ~= nil) then
+			   local fullItemInfo2 = BFAMasterLooter.GetFullItemInfo(needInformation.itemLink2);
+			   ShowItemOnFrame(fullItemInfo2, container);
+			end
+			
+			local label = AceGUI:Create("Label");
+			local text = needInformation.equippedIlvl .. "(actual) - " .. needInformation.maxIlvl .. "(max) - " .. needInformation.rand .. "(rand) - " .. needInformation.note;
+			
+			label:SetText(text);
+			label:SetWidth(350);
+			label:SetFont("Fonts\\ARIALN.ttf", 15);
+			container:AddChild(label);
+		end
 	end
-	
+	local heading = AceGUI:Create("Heading");
+	heading:SetText("lul");
+	container:AddChild(heading);
 end
 
 local function AddNeedLabel(container, text, red, green, blue)
@@ -938,6 +883,46 @@ local function AddNeedLabel(container, text, red, green, blue)
 	bisLabel:SetColor(red, green, blue);
 	bisLabel:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE, MONOCHROME")
 	container:AddChild(bisLabel);
+end
+
+local function AddItemToAttribFrame(itemId)
+	local loot = lootList[itemId];
+	local looter = loot.looter;
+	
+	if (loot.bis ~= nil or loot.ur ~= nil or loot.ilevel ~= nil or loot.spec2 ~= nil) then
+		local container = AceGUI:Create("SimpleGroup");
+		container.released = false;
+		container:SetFullWidth(true);
+		container:SetHeight(80);
+		container:SetLayout("Flow");
+		attribFrameScroll:AddChild(container);
+
+		ShowItemOnFrame(loot.item, container);
+		
+		if (loot.bis ~= nil) then
+			AddNeedLabel(container, "BIS :", 0, 255, 0);
+			AddPlayerLine(container, loot.bis, looter, loot.item[BFAMasterLooter.FII_LINK]);
+		end
+		if (loot.ur ~= nil) then
+			AddNeedLabel(container, "UR :", 200, 150, 0);
+			AddPlayerLine(container, loot.ur, looter, loot.item[BFAMasterLooter.FII_LINK]);
+		end
+		if (loot.ilevel ~= nil) then
+			AddNeedLabel(container, "ILEVEL 4 TRADE :", 80, 0, 0);
+			AddPlayerLine(container, loot.ilevel, looter, loot.item[BFAMasterLooter.FII_LINK]);
+		end
+		if (loot.spec2 ~= nil) then
+			AddNeedLabel(container, "SPEC2 :", 80, 0, 0);
+			AddPlayerLine(container, loot.spec2, looter, loot.item[BFAMasterLooter.FII_LINK])
+		end
+		
+		local heading = AceGUI:Create("Heading");
+		container:AddChild(heading);
+		
+		if (lastItemLooterTimerEnded == totalItemLooted) then
+			attribFrame:Show();
+		end
+	end
 end
 
 Comm:RegisterComm("BFA_ML_POLICE", function(prefix, message, distribution, sender)
@@ -1000,9 +985,7 @@ Comm:RegisterComm("BFA_ML_LOOT", function(prefix, message, distribution, sender)
 		
 		C_Timer.After(TIME_FOR_RAND + TIME_BUFFER, function()
 			lastItemLooterTimerEnded = lastItemLooterTimerEnded + 1;
-			if (IsRaidLeaderOrAssist() ~= RAID_LEADER or id == 0) then
-				AddItemToAttribFrame(id);
-			end
+			AddItemToAttribFrame(id);
 		end);
 	end
 end);
