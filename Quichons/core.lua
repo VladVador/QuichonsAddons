@@ -595,6 +595,7 @@ end
 local function RemoveItemLine(container)
 	if (container.released == false) then
 		container:Release();
+
 		numberOfItemOnRand = numberOfItemOnRand - 1;
 		if (numberOfItemOnRand <= 0) then
 			mainFrame:Hide();
@@ -683,6 +684,8 @@ local function AddNeedButtonToContainer(container, itemReceived)
 	passButton:SetCallback("OnClick", function() ButtonHandler(container, "PASS", itemReceived) end);
 	container:AddChild(passButton);
 	
+	local realTimer = TIME_FOR_RAND;
+
 	local timer = AceGUI:Create("EditBox");
 	timer:SetText(tostring(TIME_FOR_RAND));
 	timer:SetDisabled(true);
@@ -690,11 +693,9 @@ local function AddNeedButtonToContainer(container, itemReceived)
 	container:AddChild(timer);
 	
 	C_Timer.NewTicker(1, function() 
-		local actualTimer = timer:GetText();
-		
-		actualTimer = tonumber(actualTimer) - 1;
-		timer:SetText(tostring(actualTimer));
-		if (actualTimer <= 0) then
+		realTimer = realTimer - 1;
+		timer:SetText(tostring(realTimer));
+		if (realTimer <= 0 and container.released == false) then
 			RemoveItemLine(container);
 		end
 	end, TIME_FOR_RAND);
@@ -890,6 +891,7 @@ local function AddItemToAttribFrame(itemId)
 	local looter = loot.looter;
 	
 	if (loot.bis ~= nil or loot.ur ~= nil or loot.ilevel ~= nil or loot.spec2 ~= nil) then
+
 		local container = AceGUI:Create("SimpleGroup");
 		container.released = false;
 		container:SetFullWidth(true);
@@ -985,7 +987,11 @@ Comm:RegisterComm("BFA_ML_LOOT", function(prefix, message, distribution, sender)
 		
 		C_Timer.After(TIME_FOR_RAND + TIME_BUFFER, function()
 			lastItemLooterTimerEnded = lastItemLooterTimerEnded + 1;
-			AddItemToAttribFrame(id);
+			if (lastItemLooterTimerEnded == totalItemLooted) then
+				for i=0,totalItemLooted do
+					AddItemToAttribFrame(i);
+				end
+			end
 		end);
 	end
 end);
@@ -1081,18 +1087,20 @@ local function Debug(secondCall)
 	local search = "Handwraps";
 	
 	if (secondCall) then
-		search = "Ebonchill";
+		search = "Watchful";
 	end
 	
 	for bag = 0,4 do
 		for slot = 1,GetContainerNumSlots(bag) do
 			local item = GetContainerItemLink(bag,slot)
 			if item and item:find(search) then
-				print("TROLOLOLOLOLOLO");
-				print(item);
 				
 				local fullItemInfo = BFAMasterLooter.GetFullItemInfo(item);
 				
+				if (secondCall) then
+					fullItemInfo[BFAMasterLooter.FII_LOOTER] = "AnotherPlayerNameNotNamo";
+				end
+
 				transmitString = BFAMasterLooter.TableToString(fullItemInfo);		
 				Comm:SendCommMessage("BFA_ML_LOOT", transmitString, "RAID");
 
@@ -1134,7 +1142,7 @@ local function Initialize(self, event, addonName, ...)
 		end
 		MajIlevelWithBag();
 		
-		--Debug();
+		--C_Timer.After(5, function()Debug();end);
 		
 	end
 end
