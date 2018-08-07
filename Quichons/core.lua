@@ -6,10 +6,10 @@ local AceGUI = LibStub("AceGUI-3.0");
 local Comm = LibStub:GetLibrary("AceComm-3.0");
 
 --- CONSTANTS --
-local VERSION = 0.3;
+local VERSION = 0.4;
 
 local TIME_FOR_LOOTING = 180;
-local TIME_FOR_RAND = 30;
+local TIME_FOR_RAND = 90;
 local TIME_BUFFER = 5;
 
 local RAID_LEADER = 2;
@@ -77,6 +77,9 @@ local lassBossKilledName = "";
 local raidLastBossLooted;
 local transmitString;
 local greaterVersion = VERSION;
+
+local totalItemLooted = 0;
+local lastItemLooterTimerEnded = 0;
 
 local numberOfItemToAttrib = 0;
 local lootList = {};
@@ -605,7 +608,6 @@ local function ButtonHandler(container, label, itemReceived, commentBox)
 	if (label ~= "PASS") then
 		local ilvl, itemLink;
 	
-		itemReceived[BFAMasterLooter.FII_RAND] = random(100);
 		itemReceived[BFAMasterLooter.FII_CHOICE] = label;
 		itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING] = UnitName("player");
 		itemReceived[BFAMasterLooter.FII_COMMENT] = commentBox:GetText();
@@ -777,6 +779,8 @@ local function coreFunctionality(self, event, ...)
 			
 			lassBossKilledName = arg2;
 			lastBossKillTime = time();
+			totalItemLooted = 0;
+			lastItemLooterTimerEnded = 0;
 			print("\124cFFFF0000Quichons ML -\124r Boss " .. lassBossKilledName .. " have been killed, you have " .. TIME_FOR_LOOTING .. "sec to loot the boss, else...");
 			numberOfItemToAttrib = 0; -- On Purge les items en attrib ou cas ou cas ou --
 			numberOfItemOnRand = 0;
@@ -795,7 +799,7 @@ local function coreFunctionality(self, event, ...)
 			end
 			
 			UpdatePoliceFrame();
-			if (IsRaidLeaderOrAssist() == RAID_LEADER or UnitName("player") == "Nâmo") then
+			if (IsRaidLeaderOrAssist() == RAID_LEADER) then
 				policeFrame:Show();
 				policeFrame.isOpen = true;
 			end
@@ -915,7 +919,9 @@ local function AddItemToAttribFrame(itemId)
 		local heading = AceGUI:Create("Heading");
 		container:AddChild(heading);
 		
-		attribFrame:Show();
+		if (lastItemLooterTimerEnded == totalItemLooted) then
+			attribFrame:Show();
+		end
 	end
 end
 
@@ -929,7 +935,7 @@ Comm:RegisterComm("BFA_ML_POLICE", function(prefix, message, distribution, sende
 				if (shitListPlayers[i] == nil) then
 					shitListPlayers[i] = lootInformation.player;
 					UpdatePoliceFrame();
-					if (IsRaidLeaderOrAssist() ~= RAID_PLEBS or UnitName("player") == "Nâmo") then
+					if (IsRaidLeaderOrAssist() ~= RAID_PLEBS) then
 						print("QUICHONS POULISH : " .. lootInformation.player .. " find funny to not use autoloot, Police Frame Updated");
 					end
 					break;
@@ -967,28 +973,32 @@ Comm:RegisterComm("BFA_ML_LOOT", function(prefix, message, distribution, sender)
 		numberOfItemOnRand = numberOfItemOnRand + 1;
 		mainFrame:Show();
 	end
-	if (IsRaidLeaderOrAssist() ~= RAID_PLEBS or UnitName("player") == "Nâmo") then
+	if (IsRaidLeaderOrAssist() ~= RAID_PLEBS) then
 		local id = numberOfItemToAttrib;
 		
 		numberOfItemToAttrib = numberOfItemToAttrib + 1;
+		totalItemLooted = totalItemLooted + 1;
 
 		lootList[id] = {};
 		lootList[id].looter = itemReceived[BFAMasterLooter.FII_LOOTER];
 		lootList[id].item = itemReceived;
 		
 		C_Timer.After(TIME_FOR_RAND + TIME_BUFFER, function()
+			lastItemLooterTimerEnded = lastItemLooterTimerEnded + 1;
 			AddItemToAttribFrame(id);
 		end);
 	end
 end);
 
 Comm:RegisterComm("BFA_ML_ATTRIB", function(prefix, message, distribution, sender)
-	if (IsRaidLeaderOrAssist() ~= RAID_PLEBS or UnitName("player") == "Nâmo") then
+	if (IsRaidLeaderOrAssist() ~= RAID_PLEBS) then
 		local itemReceived = BFAMasterLooter.StringToTable(message);
 		local itemLooter = itemReceived[BFAMasterLooter.FII_LOOTER];
 		local loot;
 		local i;
 		local j;
+
+		itemReceived[BFAMasterLooter.FII_RAND] = random(100);
 		
 		for i=0,MAX_RAID_MEMBERS do
 			loot =  lootList[i];
