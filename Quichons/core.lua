@@ -1094,8 +1094,12 @@ Comm:RegisterComm("BFA_ML_ATTRIB", function(prefix, message, distribution, sende
 	end
 end);
 
-local function Debug()
+local function Debug(secondCall)
 	local search = "Handwraps";
+	
+	if (secondCall) then
+		search = "Ebonchill";
+	end
 	
 	for bag = 0,4 do
 		for slot = 1,GetContainerNumSlots(bag) do
@@ -1111,6 +1115,12 @@ local function Debug()
 
 			end
 		end
+	end
+	
+	if (secondCall ~= true) then
+		C_Timer.After(20, function()
+				Debug(true);
+			end);
 	end
 end
 
