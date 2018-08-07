@@ -988,7 +988,7 @@ Comm:RegisterComm("BFA_ML_LOOT", function(prefix, message, distribution, sender)
 		C_Timer.After(TIME_FOR_RAND + TIME_BUFFER, function()
 			lastItemLooterTimerEnded = lastItemLooterTimerEnded + 1;
 			if (lastItemLooterTimerEnded == totalItemLooted) then
-				for i=0,totalItemLooted do
+				for i=0,totalItemLooted - 1 do
 					AddItemToAttribFrame(i);
 				end
 			end
