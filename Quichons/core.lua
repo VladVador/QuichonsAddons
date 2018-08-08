@@ -97,6 +97,8 @@ local policeFrame;
 local scrollPoliceContainer;
 local policeFrameScroll;
 local lootedBossContainer;
+local policeMargin1;
+local policeMargin2;
 local lootedBossLabelList = {};
 local shitListContainer;
 local shitListPlayers = {};
@@ -196,7 +198,7 @@ local function AddonVersionChecker()
 		
 		versionChecker:AddChild(noVersionCheckerContainer);
 	end
-	for i=0,100 do
+	for i=0,MAX_RAID_MEMBERS do
 		if (playerVersionList[i] ~= nil) then
 			if (playerVersionList[i].version == greaterVersion) then
 				goodGuy = goodGuy .. playerVersionList[i].player .. "(" .. playerVersionList[i].version .. ")" .. "     ";
@@ -314,23 +316,25 @@ local function UpdatePoliceLootList()
 end
 
 local function UpdatePoliceFrame()
-	local margin;
-	
 	AddonVersionChecker();
 	
-	margin = AceGUI:Create("SimpleGroup");
-	margin:SetFullWidth(true);
-	margin:SetHeight(20);
-	margin:SetLayout("Fill");
-	policeFrameScroll:AddChild(margin);
+	if (policeMargin1 == nil) then
+		policeMargin1 = AceGUI:Create("SimpleGroup");
+		policeMargin1:SetFullWidth(true);
+		policeMargin1:SetHeight(20);
+		policeMargin1:SetLayout("Fill");
+		policeFrameScroll:AddChild(policeMargin1);
+	end
 	
 	UpdatePoliceLootList();
 	
-	margin = AceGUI:Create("SimpleGroup");
-	margin:SetFullWidth(true);
-	margin:SetHeight(20);
-	margin:SetLayout("Fill");
-	policeFrameScroll:AddChild(margin);
+	if (policeMargin2 == nil) then
+		policeMargin2 = AceGUI:Create("SimpleGroup");
+		policeMargin2:SetFullWidth(true);
+		policeMargin2:SetHeight(20);
+		policeMargin2:SetLayout("Fill");
+		policeFrameScroll:AddChild(policeMargin2);
+	end
 	
 	UpdatePoliceShitList();
 end
@@ -339,8 +343,6 @@ Comm:RegisterComm("BFA_ML_VERS", function(prefix, message, distribution, sender)
 	local i;
 	
 	if (message == ASK_FOR_VERSION) then
-		versionInformation = {};
-		
 		transmitString = tostring(VERSION);
 		Comm:SendCommMessage("BFA_ML_VERS", transmitString, "RAID");
 	else
@@ -359,7 +361,7 @@ Comm:RegisterComm("BFA_ML_VERS", function(prefix, message, distribution, sender)
 			end
 		end
 		if (found == false) then
-			for i=0,100 do
+			for i=0,MAX_RAID_MEMBERS do
 				if (playerVersionList[i] == nil) then
 					playerVersionList[i] = {};
 					playerVersionList[i].player = sender;
@@ -370,7 +372,7 @@ Comm:RegisterComm("BFA_ML_VERS", function(prefix, message, distribution, sender)
 		end
 	end
 	if (policeFrame.isOpen == true) then
-		UpdatePoliceFrame();
+		AddonVersionChecker();
 	end
 end);
 
@@ -1004,7 +1006,11 @@ Comm:RegisterComm("BFA_ML_ATTRIB", function(prefix, message, distribution, sende
 		local i;
 		local j;
 
-		itemReceived[BFAMasterLooter.FII_RAND] = random(100);
+	    if (IsRaidLeaderOrAssist() == RAID_LEADER) then
+			itemReceived[BFAMasterLooter.FII_RAND] = random(100);
+		else
+			itemReceived[BFAMasterLooter.FII_RAND] = "-";
+		end
 		
 		for i=0,MAX_RAID_MEMBERS do
 			loot =  lootList[i];
