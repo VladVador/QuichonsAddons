@@ -266,7 +266,7 @@ local function UpdatePoliceLootList()
 			lootedBossContainer:SetLayout("Flow");
 			policeFrameScroll:AddChild(lootedBossContainer);
 			
-			local bossLooterLabel = AceGUI:Create("Label");
+			bossLooterLabel = AceGUI:Create("Label");
 			bossLooterLabel:SetWidth(350);
 			lootedBossContainer:AddChild(bossLooterLabel);
 			
@@ -302,9 +302,10 @@ local function UpdatePoliceLootList()
 					lootedBossContainer:AddChild(playerLabel);
 					lootedBossLabelList[i] = playerLabel;
 				end
-				playerLabel = lootedBossLabelList[i];
 
+				playerLabel = lootedBossLabelList[i];
 				playerLabel:SetText(raidLastBossLooted[i].player)
+
 				if (raidLastBossLooted[i].status == HAVE_LOOTED) then
 					playerLabel:SetColor(0, 165, 0);
 				elseif (raidLastBossLooted[i].status == PENDING_LOOT) then
@@ -805,7 +806,7 @@ local function coreFunctionality(self, event, ...)
 				end
 				
 				if (lootedBossLabelList[i] ~= nil) then
-					lootedBossLabelList[i] = "";
+					lootedBossLabelList[i]:SetText("");
 				end
 			end
 			
@@ -1101,7 +1102,7 @@ local function Debug(secondCall)
 	local search = "Handwraps";
 	
 	if (secondCall) then
-		search = "Watchful";
+		search = "Blood";
 	end
 	
 	for bag = 0,4 do
