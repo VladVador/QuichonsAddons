@@ -93,6 +93,7 @@ local attribFrame;
 local scrollAttribContainer;
 local attribFrameScroll;
 -- Police frame variable --
+local bossLooterLabel;
 local policeFrame;
 local scrollPoliceContainer;
 local policeFrameScroll;
@@ -265,10 +266,9 @@ local function UpdatePoliceLootList()
 			lootedBossContainer:SetLayout("Flow");
 			policeFrameScroll:AddChild(lootedBossContainer);
 			
-			local descriptionLabel = AceGUI:Create("Label");
-			descriptionLabel:SetText(lassBossKilledName .. " looting boss status : ");
-			descriptionLabel:SetWidth(350);
-			lootedBossContainer:AddChild(descriptionLabel);
+			local bossLooterLabel = AceGUI:Create("Label");
+			bossLooterLabel:SetWidth(350);
+			lootedBossContainer:AddChild(bossLooterLabel);
 			
 			local legendLootedLabel = AceGUI:Create("Label");
 			legendLootedLabel:SetText("Looted");
@@ -287,8 +287,10 @@ local function UpdatePoliceLootList()
 			legendNotLootedLabel:SetColor(255, 0, 0);
 			legendNotLootedLabel:SetWidth(60);
 			lootedBossContainer:AddChild(legendNotLootedLabel);
-			
 		end
+		
+		bossLooterLabel:SetText(lassBossKilledName .. " looting boss status : ");
+		
 		
 		for i=0,MAX_RAID_MEMBERS do
 			if (raidLastBossLooted[i] ~= nil) then
@@ -750,32 +752,32 @@ local function coreFunctionality(self, event, ...)
 			transmitString = BFAMasterLooter.TableToString(lootInformation);
 			Comm:SendCommMessage("BFA_ML_POLICE", transmitString, "RAID");
 		elseif (event == 'CHAT_MSG_LOOT' and (time() <= lastBossKillTime + TIME_FOR_LOOTING)) then
-		C_Timer.After(1, function()
-			local LOOT_ITEM_SELF_PATTERN = _G.LOOT_ITEM_SELF;
-			LOOT_ITEM_SELF_PATTERN = LOOT_ITEM_SELF_PATTERN:gsub('%%s', '(.+)');
-			local lootedItem = arg1:match(LOOT_ITEM_SELF_PATTERN);
-		
-			if (lootedItem) then
-				local fullItemInfo = BFAMasterLooter.GetFullItemInfo(lootedItem);
+			C_Timer.After(1, function()
+				local LOOT_ITEM_SELF_PATTERN = _G.LOOT_ITEM_SELF;
+				LOOT_ITEM_SELF_PATTERN = LOOT_ITEM_SELF_PATTERN:gsub('%%s', '(.+)');
+				local lootedItem = arg1:match(LOOT_ITEM_SELF_PATTERN);
 
-				if (fullItemInfo[BFAMasterLooter.FII_QUALITY] >= 4 and
-						(fullItemInfo[BFAMasterLooter.FII_IS_EQUIPPABLE] == true
-							or fullItemInfo[BFAMasterLooter.FII_IS_RELIC] == true)
-						and fullItemInfo[BFAMasterLooter.FII_TRADABLE] == true) then
-		
-					transmitString = BFAMasterLooter.TableToString(fullItemInfo);		
-					Comm:SendCommMessage("BFA_ML_LOOT", transmitString, "RAID");
+				if (lootedItem) then
+					local fullItemInfo = BFAMasterLooter.GetFullItemInfo(lootedItem);
+
+					if (fullItemInfo[BFAMasterLooter.FII_QUALITY] >= 4 and
+							(fullItemInfo[BFAMasterLooter.FII_IS_EQUIPPABLE] == true
+								or fullItemInfo[BFAMasterLooter.FII_IS_RELIC] == true)
+							and fullItemInfo[BFAMasterLooter.FII_TRADABLE] == true) then
+
+						transmitString = BFAMasterLooter.TableToString(fullItemInfo);		
+						Comm:SendCommMessage("BFA_ML_LOOT", transmitString, "RAID");
+
+						local maxIlvl = GetAverageItemLevel();
+
+						if (maxIlvl > BFA_MASTERLOOT_MAX_ILVL) then
+							BFA_MASTERLOOT_MAX_ILVL = maxIlvl;
+						end
+						MajIlvlPerSlot(false);
+						MajIlevelWithBag();
+					end
 				end
-			end
-		end)
-		elseif event == 'UNIT_INVENTORY_CHANGED' then
-			local maxIlvl = GetAverageItemLevel();
-		
-			if (maxIlvl > BFA_MASTERLOOT_MAX_ILVL) then
-				BFA_MASTERLOOT_MAX_ILVL = maxIlvl;
-			end
-			MajIlvlPerSlot(false);
-			MajIlevelWithBag();
+			end)
 		elseif event == 'BOSS_KILL' then
 			local raidPlayerName;
 			local i;
@@ -790,6 +792,8 @@ local function coreFunctionality(self, event, ...)
 			lootList = {};
 			InitAttribFrame();
 			InitLootFrame();
+			AskForVersion();
+			AddonVersionChecker();
 			
 			raidLastBossLooted = {}; -- On créer la liste de toute les personnes présente lors du kill --
 			for i=0,MAX_RAID_MEMBERS do
@@ -799,9 +803,13 @@ local function coreFunctionality(self, event, ...)
 					raidLastBossLooted[i].status = PENDING_LOOT;
 					raidLastBossLooted[i].player = raidPlayerName;
 				end
+				
+				if (lootedBossLabelList[i] ~= nil) then
+					lootedBossLabelList[i] = "";
+				end
 			end
 			
-			UpdatePoliceFrame();
+			UpdatePoliceLootList();
 			if (IsRaidLeaderOrAssist() == RAID_LEADER) then
 				policeFrame:Show();
 				policeFrame.isOpen = true;
@@ -815,7 +823,7 @@ local function coreFunctionality(self, event, ...)
 						raidLastBossLooted[i].status = DIDNT_LOOTED;
 					end
 				end
-				UpdatePoliceFrame();
+				UpdatePoliceLootList();
 			end);
 		end
 	end
@@ -938,7 +946,7 @@ Comm:RegisterComm("BFA_ML_POLICE", function(prefix, message, distribution, sende
 			for i=0,100 do
 				if (shitListPlayers[i] == nil) then
 					shitListPlayers[i] = lootInformation.player;
-					UpdatePoliceFrame();
+					UpdatePoliceShitList();
 					if (IsRaidLeaderOrAssist() ~= RAID_PLEBS) then
 						print("QUICHONS POULISH : " .. lootInformation.player .. " find funny to not use autoloot, Police Frame Updated");
 					end
@@ -949,11 +957,11 @@ Comm:RegisterComm("BFA_ML_POLICE", function(prefix, message, distribution, sende
 			local raidPlayerName;
 			
 			for i=0,MAX_RAID_MEMBERS do
-				if (raidLastBossLooted ~= nil and raidLastBossLooted[i - 0] ~= nil) then
+				if (raidLastBossLooted ~= nil and raidLastBossLooted[i] ~= nil) then
 					raidPlayerName = raidLastBossLooted[i].player;
 					if (raidPlayerName ~= nil and raidPlayerName == lootInformation.player) then
 						raidLastBossLooted[i].status = lootInformation.status;
-						UpdatePoliceFrame();
+						UpdatePoliceLootList();
 						break;
 					end
 				end
@@ -1134,7 +1142,6 @@ local function Initialize(self, event, addonName, ...)
 		
 		coreFrame:RegisterEvent("LOOT_OPENED"); -- To know if the person has loot --
 		coreFrame:RegisterEvent("CHAT_MSG_LOOT"); -- for catching new loot --
-		coreFrame:RegisterEvent("UNIT_INVENTORY_CHANGED"); -- for updating ilevel information --
 		coreFrame:RegisterEvent("BOSS_KILL"); -- for lastBossKillTime timestamp --
 		
 		local maxIlvl, _ = GetAverageItemLevel();
