@@ -6,7 +6,7 @@ local AceGUI = LibStub("AceGUI-3.0");
 local Comm = LibStub:GetLibrary("AceComm-3.0");
 
 --- CONSTANTS --
-local VERSION = 0.4;
+local VERSION = 0.5;
 
 local TIME_FOR_LOOTING = 180;
 local TIME_FOR_RAND = 90;
