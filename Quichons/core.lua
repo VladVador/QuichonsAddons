@@ -6,7 +6,7 @@ local AceGUI = LibStub("AceGUI-3.0");
 local Comm = LibStub:GetLibrary("AceComm-3.0");
 
 --- CONSTANTS --
-local VERSION = 0.5;
+local VERSION = 1.0;
 
 local TIME_FOR_LOOTING = 180;
 local TIME_FOR_RAND = 90;
@@ -88,10 +88,6 @@ local lootList = {};
 local mainFrame;
 local scrollcontainer;
 local mainFrameScroll;
--- Attrib frame variable --
-local attribFrame;
-local scrollAttribContainer;
-local attribFrameScroll;
 -- Police frame variable --
 local bossLooterLabel;
 local policeFrame;
@@ -386,11 +382,13 @@ SlashCmdList["BFAMasterLooterPolice"] = function()
    policeFrame.isOpen = true;
    UpdatePoliceFrame();
 end 
+--[[
 SLASH_BFAMasterLooterAttrib1 = "/attrib"
 SlashCmdList["BFAMasterLooterAttrib"] = function()
    attribFrame:Show();
    attribFrame.isOpen = true;
 end
+--]]
 SLASH_BFAMasterLooterLoot1 = "/loot"
 SlashCmdList["BFAMasterLooterLoot"] = function()
    mainFrame:Show();
@@ -399,115 +397,6 @@ end
 
 
 -- Function to Manage ilevel thingy
-
-local function MajIlevelWithBag()
-	local ilvl;
-	local itemSlot;
-	
-	for bag = 0,4 do
-		for slot = 1,GetContainerNumSlots(bag) do
-			local itemLink = GetContainerItemLink(bag,slot);
-			
-			if (itemLink ~= nil) then
-				_, _, _, ilvl, _, _, _, _, itemSlot = GetItemInfo(itemLink);
-				itemSlot = TRANSFORM_ITEMSLOT_TO_SLOTNAME[itemSlot];
-				
-				if (itemSlot ~= nil and BFA_MASTERLOOT_SLOT_ILVL[itemSlot] < ilvl) then
-					BFA_MASTERLOOT_SLOT_ILVL[itemSlot] = ilvl
-				end
-			end
-		end
-	end
-end
-
-local function GetIlevelOfSlot(slotName)
-	local ilvl = 0;
-	local slotID = GetInventorySlotInfo(slotName)
-	local itemLink = GetInventoryItemLink("player", slotID)
-	
-	if (itemLink ~= nil) then
-		_, _, _, ilvl = GetItemInfo(itemLink);
-	end
-	
-	return ilvl, itemLink;
-end
-
-local function GetIlevelOfMultiSlot(slotName)
-	local ilvl0, ilvl1, itemLink, itemLink2;
-	
-	if (slotName == FINGER or slotName == TRINKET) then
-		ilvl0, itemLink = GetIlevelOfSlot(slotName .. SLOT0);
-		ilvl1, itemLink2 = GetIlevelOfSlot(slotName .. SLOT1);
-	else -- else it's a weapon --
-		ilvl0, itemLink = GetIlevelOfSlot(MAINHAND);
-		ilvl1, itemLink2 = GetIlevelOfSlot(SECONDARYHAND);
-	end
-	
-	if (ilvl0 > ilvl1) then
-		return ilvl0, itemLink, itemLink2;
-	else
-		return ilvl1, itemLink, itemLink2;
-	end
-end
-
-local function MajIlvlPerSlot(force)
-	local headIlvl = GetIlevelOfSlot(HEAD);
-	local neckIlvl = GetIlevelOfSlot(NECK);
-	local shoulderIlvl = GetIlevelOfSlot(SHOULDER);
-	local backIlvl = GetIlevelOfSlot(BACK);
-	local chestIlvl = GetIlevelOfSlot(CHEST);
-	local wristIlvl = GetIlevelOfSlot(WRIST);
-	local handsIlvl = GetIlevelOfSlot(HANDS);
-	local waistIlvl = GetIlevelOfSlot(WAIST);
-	local legsIlvl = GetIlevelOfSlot(LEGS);
-	local feetIlvl = GetIlevelOfSlot(FEET);
-	local fingerIlvl = GetIlevelOfMultiSlot(FINGER);
-	local trinketIlvl = GetIlevelOfMultiSlot(TRINKET);
-	local weaponIlvl = GetIlevelOfMultiSlot(WEAPON);
-	
-	if (BFA_MASTERLOOT_SLOT_ILVL == nil) then
-		BFA_MASTERLOOT_SLOT_ILVL = {};
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[HEAD] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[HEAD] < headIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[HEAD] = headIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[NECK] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[NECK] < neckIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[NECK] = neckIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[SHOULDER] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[SHOULDER] < shoulderIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[SHOULDER] = shoulderIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[BACK] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[BACK] < backIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[BACK] = backIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[CHEST] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[CHEST] < chestIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[CHEST] = chestIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[WRIST] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[WRIST] < wristIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[WRIST] = wristIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[HANDS] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[HANDS] < handsIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[HANDS] = handsIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[WAIST] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[WAIST] < waistIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[WAIST] = waistIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[LEGS] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[LEGS] < legsIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[LEGS] = legsIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[FEET] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[FEET] < feetIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[FEET] = feetIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[FINGER] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[FINGER] < fingerIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[FINGER] = fingerIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[TRINKET] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[TRINKET] < trinketIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[TRINKET] = trinketIlvl;
-	end
-	if (BFA_MASTERLOOT_SLOT_ILVL[WEAPON] == nil or force == true or BFA_MASTERLOOT_SLOT_ILVL[WEAPON] < weaponIlvl) then
-		BFA_MASTERLOOT_SLOT_ILVL[WEAPON] = weaponIlvl;
-	end
-end
 
 -- blabla --
 
@@ -526,7 +415,7 @@ end
 local function InitLootFrame()
 	mainFrame = AceGUI:Create("Frame");
 	mainFrame:SetLayout("Flow");
-	mainFrame:SetWidth(600);
+	mainFrame:SetWidth(200);
 	mainFrame:SetHeight(400);
 	mainFrame:SetPoint("TOP", nil, "TOP", 0, -50);
 	mainFrame:SetTitle("LOOT");
@@ -541,26 +430,6 @@ local function InitLootFrame()
 	mainFrameScroll = AceGUI:Create("ScrollFrame");
 	mainFrameScroll:SetLayout("Flow");
 	scrollcontainer:AddChild(mainFrameScroll);
-end
-
-local function InitAttribFrame()
-	attribFrame = AceGUI:Create("Frame");
-	attribFrame:SetLayout("Flow");
-	attribFrame:SetWidth(600);
-	attribFrame:SetHeight(400);
-	attribFrame:SetPoint("TOPLEFT", nil, "TOPLEFT", 0, -50);
-	attribFrame:SetTitle("ATTRIB");
-	attribFrame:Hide();
-
-	scrollAttribContainer = AceGUI:Create("SimpleGroup");
-	scrollAttribContainer:SetFullWidth(true);
-	scrollAttribContainer:SetFullHeight(true);
-	scrollAttribContainer:SetLayout("Fill");
-	attribFrame:AddChild(scrollAttribContainer);
-
-	attribFrameScroll = AceGUI:Create("ScrollFrame");
-	attribFrameScroll:SetLayout("Flow");
-	scrollAttribContainer:AddChild(attribFrameScroll);
 end
 
 local function InitPoliceFrame()
@@ -584,152 +453,6 @@ local function InitPoliceFrame()
 	policeFrameScroll:SetLayout("Flow");
 	scrollPoliceContainer:AddChild(policeFrameScroll);
 end
-
-local function RemoveItemAttrib(container)
-	if (container.released == false) then
-		container:Release();
-		numberOfItemToAttrib = numberOfItemToAttrib - 1;
-		if (numberOfItemToAttrib <= 0) then
-			attribFrame:Hide();
-			numberOfItemToAttrib = 0;
-		end
-		container.released = true;
-	end
-end
-
-local function RemoveItemLine(container)
-	if (container.released == false) then
-		container:Release();
-
-		numberOfItemOnRand = numberOfItemOnRand - 1;
-		if (numberOfItemOnRand <= 0) then
-			mainFrame:Hide();
-			numberOfItemOnRand = 0;
-		end
-		container.released = true;
-	end
-end
-
-local function ButtonHandler(container, label, itemReceived, commentBox)
-	if (label ~= "PASS") then
-		local ilvl, itemLink;
-	
-		itemReceived[BFAMasterLooter.FII_CHOICE] = label;
-		itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING] = UnitName("player");
-		itemReceived[BFAMasterLooter.FII_COMMENT] = commentBox:GetText();
-		
-		
-		local itemSlot = itemReceived[BFAMasterLooter.FII_ITEM_EQUIP_LOC];
-		itemSlot = TRANSFORM_ITEMSLOT_TO_SLOTNAME[itemSlot];
-		
-		if (itemSlot ~= nil) then
-			itemReceived[BFAMasterLooter.FII_MAX_ILVL] = BFA_MASTERLOOT_SLOT_ILVL[itemSlot];
-		else
-			itemReceived[BFAMasterLooter.FII_MAX_ILVL] = 0;
-		end
-		if (itemSlot == FINGER or itemSlot == TRINKET or itemSlot == WEAPON) then
-			ilvl, itemLink, itemLink2 = GetIlevelOfMultiSlot(itemSlot);
-
-			itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL] = ilvl;
-			itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK] = itemLink;
-			itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2] = itemLink2;
-		else
-			if (itemSlot ~= nil) then
-				ilvl, itemLink = GetIlevelOfSlot(itemSlot);
-
-				itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL] = ilvl;
-				itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK] = itemLink;
-			else
-				itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL] = 0;
-				itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK] = itemLink;
-			end
-		end
-		
-		transmitString = BFAMasterLooter.TableToString(itemReceived);	
-		Comm:SendCommMessage("BFA_ML_ATTRIB", transmitString, "RAID");
-	end
-	RemoveItemLine(container);
-end
-
-local function AddNeedButtonToContainer(container, itemReceived)
-	container.released = false;
-	
-	local commentBox = AceGUI:Create("EditBox");
-	commentBox:SetWidth(150);
-	commentBox:DisableButton(true);
-	container:AddChild(commentBox);
-	
-	local bisButton = AceGUI:Create("Button");
-	bisButton:SetText("BiS");
-	bisButton:SetWidth(50);
-	bisButton:SetCallback("OnClick", function() ButtonHandler(container, "BIS", itemReceived, commentBox) end);
-	container:AddChild(bisButton);
-	
-	local urButton = AceGUI:Create("Button");
-	urButton:SetText("UR");
-	urButton:SetWidth(50);
-	urButton:SetCallback("OnClick", function() ButtonHandler(container, "UR", itemReceived, commentBox) end);
-	container:AddChild(urButton);
-	
-	local iLevelForTradeButton = AceGUI:Create("Button");
-	iLevelForTradeButton:SetText("ILVL");
-	iLevelForTradeButton:SetWidth(60);
-	iLevelForTradeButton:SetCallback("OnClick", function() ButtonHandler(container, "ILEVEL4TRADE", itemReceived, commentBox) end);
-	container:AddChild(iLevelForTradeButton);
-	
-	local urBisButton = AceGUI:Create("Button");
-	urBisButton:SetText("Spé2");
-	urBisButton:SetWidth(75);
-	urBisButton:SetCallback("OnClick", function() ButtonHandler(container, "Spé2", itemReceived, commentBox) end);
-	container:AddChild(urBisButton);
-	
-	local passButton = AceGUI:Create("Button");
-	passButton:SetText("PASS");
-	passButton:SetWidth(70);
-	passButton:SetCallback("OnClick", function() ButtonHandler(container, "PASS", itemReceived) end);
-	container:AddChild(passButton);
-	
-	local realTimer = TIME_FOR_RAND;
-
-	local timer = AceGUI:Create("EditBox");
-	timer:SetText(tostring(TIME_FOR_RAND));
-	timer:SetDisabled(true);
-	timer:SetWidth(50);
-	container:AddChild(timer);
-	
-	C_Timer.NewTicker(1, function() 
-		realTimer = realTimer - 1;
-		timer:SetText(tostring(realTimer));
-		if (realTimer <= 0 and container.released == false) then
-			RemoveItemLine(container);
-		end
-	end, TIME_FOR_RAND);
-	
-	return container;
-end
-
-local function ShowItemOnFrame(item, container)
-	local itemIcon = AceGUI:Create("Icon");
-	
-	if (item[BFAMasterLooter.FII_TEXTURE]) then
-		itemIcon:SetImage(item[BFAMasterLooter.FII_TEXTURE]);
-	end
-	
-	itemIcon:SetImageSize(32,32);
-	itemIcon:SetWidth(32);
-	itemIcon:SetCallback("OnEnter", function(widget)
-		GameTooltip:SetOwner(widget.frame, "ANCHOR_TOPRIGHT");
-		GameTooltip:SetHyperlink(item[BFAMasterLooter.FII_LINK]);
-		GameTooltip:Show();
-		end)			
-	itemIcon:SetCallback("OnLeave", function(widget)
-		GameTooltip:Hide();
-		end)
-	container:AddChild(itemIcon);
-end
-
-
-
 
 local addonLoadedFrame;
 local coreFrame;
@@ -769,13 +492,6 @@ local function coreFunctionality(self, event, ...)
 						transmitString = BFAMasterLooter.TableToString(fullItemInfo);		
 						Comm:SendCommMessage("BFA_ML_LOOT", transmitString, "RAID");
 
-						local maxIlvl = GetAverageItemLevel();
-
-						if (maxIlvl > BFA_MASTERLOOT_MAX_ILVL) then
-							BFA_MASTERLOOT_MAX_ILVL = maxIlvl;
-						end
-						MajIlvlPerSlot(false);
-						MajIlevelWithBag();
 					end
 				end
 			end)
@@ -791,7 +507,7 @@ local function coreFunctionality(self, event, ...)
 			numberOfItemToAttrib = 0; -- On Purge les items en attrib ou cas ou cas ou --
 			numberOfItemOnRand = 0;
 			lootList = {};
-			InitAttribFrame();
+			mainFrame:Release();
 			InitLootFrame();
 			AskForVersion();
 			AddonVersionChecker();
@@ -816,127 +532,22 @@ local function coreFunctionality(self, event, ...)
 				policeFrame.isOpen = true;
 			end
 			
-			C_Timer.After(TIME_FOR_LOOTING + TIME_BUFFER, function()
-				local i;
-				
-				for i=0,MAX_RAID_MEMBERS do
-					if (raidLastBossLooted[i] ~= nil and raidLastBossLooted[i].status == PENDING_LOOT) then
-						raidLastBossLooted[i].status = DIDNT_LOOTED;
+			if (IsRaidLeaderOrAssist() ~= RAID_PLEBS) then
+				C_Timer.After(TIME_FOR_LOOTING + TIME_BUFFER, function()
+					local i;
+					
+					for i=0,MAX_RAID_MEMBERS do
+						if (raidLastBossLooted[i] ~= nil and raidLastBossLooted[i].status == PENDING_LOOT) then
+							raidLastBossLooted[i].status = DIDNT_LOOTED;
+						end
 					end
-				end
-				UpdatePoliceLootList();
-			end);
+					UpdatePoliceLootList();
+				end);
+			end
 		end
 	end
 end
 
-local function AttribLoot(looter, playerWhoWon, itemLink, container)
-	SendChatMessage("Envoie le loot " .. itemLink .. " à " .. playerWhoWon .. "!", "WHISPER", "ORCISH", looter);
-	RemoveItemAttrib(container);
-end
-
-local function AddPlayerLine(container, needList, looter, itemLink)
-	local playerClass;
-	local color;
-	local i;
-	
-	for i=0, MAX_RAID_MEMBERS do
-		if (needList[i] ~= nil) then
-			local needInformation = needList[i];
-			
-			local playerLabel = AceGUI:Create("Label");
-			playerLabel:SetText(needInformation.player);
-			_, playerClass = UnitClass(needInformation.player);
-			color = RAID_CLASS_COLORS[playerClass];
-			
-			if (color ~= nil) then
-				playerLabel:SetColor(color.r, color.g, color.b);
-			end
-			playerLabel:SetWidth(90);
-			playerLabel:SetFont("Fonts\\ARIALN.ttf", 15, "OUTLINE, MONOCHROME")
-			container:AddChild(playerLabel);
-			
-			if (IsRaidLeaderOrAssist() == RAID_LEADER) then
-				local attribButton = AceGUI:Create("Icon");
-				
-				attribButton:SetImageSize(32, 32);
-				attribButton:SetWidth(32);
-				attribButton:SetImage("1418621");
-				attribButton:SetCallback("OnClick", function() AttribLoot(looter, needInformation.player, itemLink, container) end);
-				container:AddChild(attribButton);
-			end
-			
-			local fullItemInfo = BFAMasterLooter.GetFullItemInfo(needInformation.itemLink);
-			ShowItemOnFrame(fullItemInfo, container);
-
-			if (needInformation.itemLink2 ~= nil) then
-			   local fullItemInfo2 = BFAMasterLooter.GetFullItemInfo(needInformation.itemLink2);
-			   ShowItemOnFrame(fullItemInfo2, container);
-			end
-			
-			local label = AceGUI:Create("Label");
-			local text = needInformation.equippedIlvl .. "(actual) - " .. needInformation.maxIlvl .. "(max) - " .. needInformation.rand .. "(rand) - " .. needInformation.note;
-			
-			label:SetText(text);
-			label:SetWidth(350);
-			label:SetFont("Fonts\\ARIALN.ttf", 15);
-			container:AddChild(label);
-		end
-	end
-	local heading = AceGUI:Create("Heading");
-	heading:SetText("lul");
-	container:AddChild(heading);
-end
-
-local function AddNeedLabel(container, text, red, green, blue)
-	local bisLabel = AceGUI:Create("Label");
-	bisLabel:SetWidth(500);
-	bisLabel:SetText(text);
-	bisLabel:SetColor(red, green, blue);
-	bisLabel:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE, MONOCHROME")
-	container:AddChild(bisLabel);
-end
-
-local function AddItemToAttribFrame(itemId)
-	local loot = lootList[itemId];
-	local looter = loot.looter;
-	
-	if (loot.bis ~= nil or loot.ur ~= nil or loot.ilevel ~= nil or loot.spec2 ~= nil) then
-
-		local container = AceGUI:Create("SimpleGroup");
-		container.released = false;
-		container:SetFullWidth(true);
-		container:SetHeight(80);
-		container:SetLayout("Flow");
-		attribFrameScroll:AddChild(container);
-
-		ShowItemOnFrame(loot.item, container);
-		
-		if (loot.bis ~= nil) then
-			AddNeedLabel(container, "BIS :", 0, 255, 0);
-			AddPlayerLine(container, loot.bis, looter, loot.item[BFAMasterLooter.FII_LINK]);
-		end
-		if (loot.ur ~= nil) then
-			AddNeedLabel(container, "UR :", 200, 150, 0);
-			AddPlayerLine(container, loot.ur, looter, loot.item[BFAMasterLooter.FII_LINK]);
-		end
-		if (loot.ilevel ~= nil) then
-			AddNeedLabel(container, "ILEVEL 4 TRADE :", 80, 0, 0);
-			AddPlayerLine(container, loot.ilevel, looter, loot.item[BFAMasterLooter.FII_LINK]);
-		end
-		if (loot.spec2 ~= nil) then
-			AddNeedLabel(container, "SPEC2 :", 80, 0, 0);
-			AddPlayerLine(container, loot.spec2, looter, loot.item[BFAMasterLooter.FII_LINK])
-		end
-		
-		local heading = AceGUI:Create("Heading");
-		container:AddChild(heading);
-		
-		if (lastItemLooterTimerEnded == totalItemLooted) then
-			attribFrame:Show();
-		end
-	end
-end
 
 Comm:RegisterComm("BFA_ML_POLICE", function(prefix, message, distribution, sender)
 	local lootInformation = BFAMasterLooter.StringToTable(message);
@@ -971,138 +582,59 @@ Comm:RegisterComm("BFA_ML_POLICE", function(prefix, message, distribution, sende
 	end
 end);
 
+local function ShowItemOnFrame(item, container)
+	local itemIcon = AceGUI:Create("Icon");
+	
+	if (item[BFAMasterLooter.FII_TEXTURE]) then
+		itemIcon:SetImage(item[BFAMasterLooter.FII_TEXTURE]);
+	end
+	
+	itemIcon:SetImageSize(32,32);
+	itemIcon:SetWidth(32);
+	itemIcon:SetCallback("OnEnter", function(widget)
+		GameTooltip:SetOwner(widget.frame, "ANCHOR_TOPRIGHT");
+		GameTooltip:SetHyperlink(item[BFAMasterLooter.FII_LINK]);
+		GameTooltip:Show();
+		end)			
+	itemIcon:SetCallback("OnLeave", function(widget)
+		GameTooltip:Hide();
+		end)
+	container:AddChild(itemIcon);
+end
+
 Comm:RegisterComm("BFA_ML_LOOT", function(prefix, message, distribution, sender)
     local itemReceived = BFAMasterLooter.StringToTable(message);
 	
-	if (BFAMasterLooter.IsEquippableItemForCharacter(itemReceived)) then
-		local container = AceGUI:Create("SimpleGroup");
-		container:SetFullWidth(true);
-		container:SetHeight(80);
-		container:SetLayout("Flow");
-		mainFrameScroll:AddChild(container);
-	   
-		ShowItemOnFrame(itemReceived, container);
-		AddNeedButtonToContainer(container, itemReceived);
-		numberOfItemOnRand = numberOfItemOnRand + 1;
-		mainFrame:Show();
+	local container = AceGUI:Create("SimpleGroup");
+	container:SetFullWidth(true);
+	container:SetHeight(80);
+	container:SetLayout("Flow");
+	mainFrameScroll:AddChild(container);
+   
+	ShowItemOnFrame(itemReceived, container);
+	
+	local playerLabel = AceGUI:Create("Label");
+	playerLabel:SetText(itemReceived[BFAMasterLooter.FII_LOOTER]);
+	_, playerClass = UnitClass(itemReceived[BFAMasterLooter.FII_LOOTER]);
+	color = RAID_CLASS_COLORS[playerClass];
+	
+	if (color ~= nil) then
+		playerLabel:SetColor(color.r, color.g, color.b);
 	end
-	if (IsRaidLeaderOrAssist() ~= RAID_PLEBS) then
-		local id = numberOfItemToAttrib;
-		
-		numberOfItemToAttrib = numberOfItemToAttrib + 1;
-		totalItemLooted = totalItemLooted + 1;
-
-		lootList[id] = {};
-		lootList[id].looter = itemReceived[BFAMasterLooter.FII_LOOTER];
-		lootList[id].item = itemReceived;
-		
-		C_Timer.After(TIME_FOR_RAND + TIME_BUFFER, function()
-			lastItemLooterTimerEnded = lastItemLooterTimerEnded + 1;
-			if (lastItemLooterTimerEnded == totalItemLooted) then
-				for i=0,totalItemLooted - 1 do
-					AddItemToAttribFrame(i);
-				end
-			end
-		end);
-	end
+	playerLabel:SetWidth(110);
+	playerLabel:SetFont("Fonts\\ARIALN.ttf", 15, "OUTLINE, MONOCHROME")
+	container:AddChild(playerLabel);
+	
+	mainFrame:Show();
 end);
 
-Comm:RegisterComm("BFA_ML_ATTRIB", function(prefix, message, distribution, sender)
-	if (IsRaidLeaderOrAssist() ~= RAID_PLEBS) then
-		local itemReceived = BFAMasterLooter.StringToTable(message);
-		local itemLooter = itemReceived[BFAMasterLooter.FII_LOOTER];
-		local loot;
-		local i;
-		local j;
 
-	    if (IsRaidLeaderOrAssist() == RAID_LEADER) then
-			itemReceived[BFAMasterLooter.FII_RAND] = random(100);
-		else
-			itemReceived[BFAMasterLooter.FII_RAND] = "-";
-		end
-		
-		for i=0,MAX_RAID_MEMBERS do
-			loot =  lootList[i];
-			if (loot ~= nil and itemLooter == lootList[i].looter) then
-				if (itemReceived[BFAMasterLooter.FII_CHOICE] == "BIS") then
-					if (loot.bis == nil) then
-						loot.bis = {};
-					end
-					for j=0,MAX_RAID_MEMBERS do
-						if (loot.bis[j] == nil) then
-							loot.bis[j] = {};
-							loot.bis[j].player = itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING];
-							loot.bis[j].equippedIlvl = itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL];
-							loot.bis[j].itemLink = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK];
-							loot.bis[j].itemLink2 = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2];
-							loot.bis[j].maxIlvl = itemReceived[BFAMasterLooter.FII_MAX_ILVL];
-							loot.bis[j].rand = itemReceived[BFAMasterLooter.FII_RAND];
-							loot.bis[j].note = itemReceived[BFAMasterLooter.FII_COMMENT];
-							break;
-						end
-					end
-				elseif (itemReceived[BFAMasterLooter.FII_CHOICE] == "UR") then
-					if (loot.ur == nil) then
-						loot.ur = {};
-					end
-					for j=0,MAX_RAID_MEMBERS do
-						if (loot.ur[j] == nil) then
-							loot.ur[j] = {};
-							loot.ur[j].player = itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING];
-							loot.ur[j].equippedIlvl = itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL];
-							loot.ur[j].itemLink = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK];
-							loot.ur[j].itemLink2 = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2];
-							loot.ur[j].maxIlvl = itemReceived[BFAMasterLooter.FII_MAX_ILVL];
-							loot.ur[j].rand = itemReceived[BFAMasterLooter.FII_RAND];
-							loot.ur[j].note = itemReceived[BFAMasterLooter.FII_COMMENT];
-							break;
-						end
-					end
-				elseif (itemReceived[BFAMasterLooter.FII_CHOICE] == "ILEVEL4TRADE") then
-					if (loot.ilevel == nil) then
-						loot.ilevel = {};
-					end
-					for j=0,MAX_RAID_MEMBERS do
-						if (loot.ilevel[j] == nil) then
-							loot.ilevel[j] = {};
-							loot.ilevel[j].player = itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING];
-							loot.ilevel[j].equippedIlvl = itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL];
-							loot.ilevel[j].itemLink = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK];
-							loot.ilevel[j].itemLink2 = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2];
-							loot.ilevel[j].maxIlvl = itemReceived[BFAMasterLooter.FII_MAX_ILVL];
-							loot.ilevel[j].rand = itemReceived[BFAMasterLooter.FII_RAND];
-							loot.ilevel[j].note = itemReceived[BFAMasterLooter.FII_COMMENT];
-							break;
-						end
-					end
-				elseif (itemReceived[BFAMasterLooter.FII_CHOICE] == "Spé2") then
-					if (loot.spec2 == nil) then
-						loot.spec2 = {};
-					end
-					for j=0,MAX_RAID_MEMBERS do
-						if (loot.spec2[j] == nil) then
-							loot.spec2[j] = {};
-							loot.spec2[j].player = itemReceived[BFAMasterLooter.FII_PLAYER_NEEDING];
-							loot.spec2[j].equippedIlvl = itemReceived[BFAMasterLooter.FII_EQUIPED_ILVL];
-							loot.spec2[j].itemLink = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK];
-							loot.spec2[j].itemLink2 = itemReceived[BFAMasterLooter.FII_EQUIPED_ITEM_LINK2];
-							loot.spec2[j].maxIlvl = itemReceived[BFAMasterLooter.FII_MAX_ILVL];
-							loot.spec2[j].rand = itemReceived[BFAMasterLooter.FII_RAND];
-							loot.spec2[j].note = itemReceived[BFAMasterLooter.FII_COMMENT];
-							break;
-						end
-					end
-				end
-			end
-		end
-	end
-end);
 
 local function Debug(secondCall)
-	local search = "Handwraps";
+	local search = "Azerothian";
 	
 	if (secondCall) then
-		search = "Blood";
+		search = "Ascension";
 	end
 	
 	for bag = 0,4 do
@@ -1124,8 +656,14 @@ local function Debug(secondCall)
 	end
 	
 	if (secondCall ~= true) then
-		C_Timer.After(20, function()
+		C_Timer.After(10, function()
 				Debug(true);
+			end);
+	else
+		C_Timer.After(10, function()
+				mainFrame:Release();
+				InitLootFrame();
+				Debug();
 			end);
 	end
 end
@@ -1135,7 +673,6 @@ local function Initialize(self, event, addonName, ...)
 	if (addonName == 'Quichons') then
 	
 		InitLootFrame();
-		InitAttribFrame();
 		InitPoliceFrame();
 		coreFrame = CreateFrame("Frame");
 		
@@ -1144,20 +681,9 @@ local function Initialize(self, event, addonName, ...)
 		coreFrame:RegisterEvent("LOOT_OPENED"); -- To know if the person has loot --
 		coreFrame:RegisterEvent("CHAT_MSG_LOOT"); -- for catching new loot --
 		coreFrame:RegisterEvent("BOSS_KILL"); -- for lastBossKillTime timestamp --
-		
-		local maxIlvl, _ = GetAverageItemLevel();
-		
-		if (BFA_MASTERLOOT_MAX_ILVL == nil or (maxIlvl < 900 and BFA_MASTERLOOT_MAX_ILVL > 900)) then
-			BFA_MASTERLOOT_MAX_ILVL = maxIlvl;
-			MajIlvlPerSlot(true);
-		elseif (maxIlvl > BFA_MASTERLOOT_MAX_ILVL) then
-			BFA_MASTERLOOT_MAX_ILVL = maxIlvl;
-			MajIlvlPerSlot(false);
-		end
-		MajIlevelWithBag();
+
 		
 		--C_Timer.After(5, function()Debug();end);
-		
 	end
 end
 

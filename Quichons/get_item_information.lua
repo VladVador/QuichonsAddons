@@ -85,7 +85,7 @@ local function CheckIfItemIsTradable(itemLinkOfLootedItem)
 				itemTooltip:SetOwner(UIParent, 'ANCHOR_NONE')
 				itemTooltip:SetBagItem(bag, slot)
 				
-				for i = 10, 18 do
+				for i = 10, 25 do
 					local tooltipText = itemTooltip.leftside[i]:GetText();
 					if (tooltipText ~= nill and tooltipText:match(TRADABLE)) then
 						tradable = true;
