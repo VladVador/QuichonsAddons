@@ -6,7 +6,7 @@ local AceGUI = LibStub("AceGUI-3.0");
 local Comm = LibStub:GetLibrary("AceComm-3.0");
 
 --- CONSTANTS --
-local VERSION = 1.0;
+local VERSION = 1.1;
 
 local TIME_FOR_LOOTING = 180;
 local TIME_FOR_RAND = 90;
@@ -598,6 +598,9 @@ local function ShowItemOnFrame(item, container)
 		end)			
 	itemIcon:SetCallback("OnLeave", function(widget)
 		GameTooltip:Hide();
+		end)
+	itemIcon:SetCallback("OnClick", function()
+		SendChatMessage(item[BFAMasterLooter.FII_LINK] ,"RAID");
 		end)
 	container:AddChild(itemIcon);
 end
